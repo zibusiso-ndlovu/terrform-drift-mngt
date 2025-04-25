@@ -1,43 +1,15 @@
 
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 3.24.1"
-    }
-  }
-  required_version = ">= 0.15"
-}
-
-provider "aws" {
-  region = var.region
-}
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"] # Canonical
-}
 
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
   public_key = file("${path.module}/key.pub")
 }
 
-resource "aws_instance" "example" {
-  ami                    = data.aws_ami.ubuntu.id
+
+resource "aws_instance" "ubuntu_vm" {
+  ami           = var.ubuntu_ami_id
   key_name               = aws_key_pair.deployer.key_name
-  instance_type          = "t2.micro"
+  instance_type = "t2.micro"
   vpc_security_group_ids = [aws_security_group.sg_ssh.id]
   user_data              = <<-EOF
               #!/bin/bash
@@ -47,8 +19,9 @@ resource "aws_instance" "example" {
               echo "Hello World. Terraform Dift Demo" > /var/www/html/index.html
               systemctl restart apache2
               EOF
+
   tags = {
-    Name          = "terraform-learn-state-ec2"
+    Name          = "terraform-drift-state-ec2"
     drift_example = "v1"
   }
 }
