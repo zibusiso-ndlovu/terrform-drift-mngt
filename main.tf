@@ -1,15 +1,9 @@
 
 
-resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = file("${path.module}/key.pub")
-}
-
-
 resource "aws_instance" "ubuntu_vm" {
-  ami           = var.ubuntu_ami_id
-  key_name               = aws_key_pair.deployer.key_name
-  instance_type = "t2.micro"
+  ami                    = var.ubuntu_ami_id
+  key_name               = "deployer-key"
+  instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.sg_ssh.id]
   user_data              = <<-EOF
               #!/bin/bash
